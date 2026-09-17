@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <title>Briefing Matutino Planta 2</title>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              800: '#0c4a6e',
+              900: '#082f49',
+            },
+            whatsapp: {
+              DEFAULT: '#25D366',
+              dark: '#128C7E',
+              hover: '#20ba59',
+            }
+          },
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- html2pdf.js bundle (includes html2canvas and jsPDF) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <style>
+    /* Estilos de inputs táctiles confortables y prevención de zoom no deseado en iOS */
+    input, select, textarea {
+      font-size: 16px !important;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Scrollbar minimalista */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+
+    /* Animación suave para añadir/remover tarjetas */
+    .card-enter {
+      animation: slideDown 0.22s ease-out forwards;
+    }
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Plantilla oculta para el PDF de 1 página */
+    #pdf-render-wrapper {
+      position: absolute;
+      left: -9999px;
+      top: -9999px;
+      width: 794px; /* Ancho estándar A4/Carta a 96 DPI */
+      background: #ffffff;
+      color: #0f172a;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+
+    /* Reglas de impresión para asegurar 1 página exacta */
+    @page {
+      size: letter portrait;
+      margin: 8mm;
+    }
+  </style>
+</head>
+<body class="min-h-full flex flex-col bg-slate-950 font-sans pb-32 selection:bg-sky-500 selection:text-white">
+
+  <!-- ================= HEADER SUPERIOR FIJO ================= -->
+  <header class="sticky top-0 z-40 bg-slate-900/95 backdrop-blur border-b border-slate-800 px-4 py-3 shadow-md">
+    <div class="max-w-xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2.5">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-sky-500 to-blue-700 flex items-center justify-center text-white font-black text-sm shadow-inner tracking-wider">
+          P2
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-white tracking-tight leading-tight flex items-center gap-1.5">
+            Briefing Matutino
+            <span class="text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-400 border border-sky-500/30">Planta 2</span>
+          </h1>
+          <p class="text-xs text-slate-400 flex items-center gap-1" id="live-datetime">
+            <span>Cargando fecha...</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Acciones de Cabecera: Configuración y Limpiar -->
+      <div class="flex items-center space-x-1">
+        <button id="btn-open-settings" type="button" aria-label="Configuración de WhatsApp" class="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors relative" title="Configurar WhatsApp de Dirección">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          <span id="phone-badge" class="hidden absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-slate-900"></span>
+        </button>
+
+        <button id="btn-reset-form" type="button" aria-label="Limpiar formulario" class="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors" title="Limpiar formato (Nuevo día)">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= BANNER INFORMATIVO RÁPIDO ================= -->
+  <div class="bg-gradient-to-r from-sky-950 via-slate-900 to-slate-950 border-b border-sky-900/40 px-4 py-2 text-xs">
+    <div class="max-w-xl mx-auto flex items-center justify-between text-slate-300">
+      <div class="flex items-center gap-1.5">
+        <span class="inline-flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="font-medium">Junta Operativa 08:00 AM</span>
+      </div>
+      <span class="text-amber-400 font-semibold text-[11px] bg-amber-950/60 border border-amber-800/50 px-2 py-0.5 rounded-full flex items-center gap-1">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        Entrega &lt; 09:00 AM
+      </span>
+    </div>
+  </div>
+
+  <!-- ================= CONTENEDOR PRINCIPAL ================= -->
+  <main class="max-w-xl mx-auto w-full px-4 pt-4 flex-1 flex flex-col space-y-5">
+
+    <!-- 1. CAMPO: BALA PARA DIRECCIÓN -->
+    <section class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm relative focus-within:border-sky-500/80 transition-all">
+      <div class="flex items-center justify-between mb-2">
+        <label for="bala-direccion" class="text-xs uppercase tracking-wider font-bold text-sky-400 flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          Bala para Dirección
+        </label>
+        <span id="bala-counter" class="text-[11px] text-slate-500 font-mono">0 chars</span>
+      </div>
+      <p class="text-[11px] text-slate-400 mb-2 leading-tight">
+        Resumen ejecutivo de alto impacto en 1-2 oraciones del estatus general para la junta de las 9:00 AM.
+      </p>
+      <textarea
+        id="bala-direccion"
+        rows="3"
+        placeholder="Ej: Planta operando al 95%. Línea 2 con paro de 45 min por atasco mecánico ya liberado. Resto de líneas en ritmo nominal sin riesgo para metas de turno."
+        class="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl p-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition-all resize-none text-sm leading-relaxed"
+      ></textarea>
+
+      <!-- Chips de ayuda rápida para redactar rápido -->
+      <div class="mt-2.5 flex flex-wrap gap-1.5">
+        <button type="button" class="quick-chip text-[11px] bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 px-2 py-1 rounded-lg border border-slate-700/60 transition-colors" data-chip="Planta operando al 100% de capacidad sin afectaciones mayores en el turno.">
+          🟢 100% Nominal
+        </button>
+        <button type="button" class="quick-chip text-[11px] bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 px-2 py-1 rounded-lg border border-slate-700/60 transition-colors" data-chip="Planta con producción estable; monitoreando variación de velocidad en Línea ">
+          🟡 Con Monitoreo
+        </button>
+        <button type="button" class="quick-chip text-[11px] bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 px-2 py-1 rounded-lg border border-slate-700/60 transition-colors" data-chip="Paro operativo crítico en atención por Mantenimiento. ETA de reactivación: ">
+          🔴 Paro Crítico
+        </button>
+      </div>
+    </section>
+
+    <!-- 2. RESUMEN DE INDICADORES RÁPIDOS -->
+    <section class="grid grid-cols-4 gap-2 text-center">
+      <div class="bg-slate-900 border border-slate-800/80 rounded-xl p-2.5">
+        <span class="block text-[10px] uppercase font-bold text-slate-400">Total</span>
+        <span id="metric-total" class="text-base font-extrabold text-white">0</span>
+      </div>
+      <div class="bg-slate-900 border border-emerald-900/40 rounded-xl p-2.5">
+        <span class="block text-[10px] uppercase font-bold text-emerald-400">OK</span>
+        <span id="metric-ok" class="text-base font-extrabold text-emerald-400">0</span>
+      </div>
+      <div class="bg-slate-900 border border-amber-900/40 rounded-xl p-2.5">
+        <span class="block text-[10px] uppercase font-bold text-amber-400">Monit.</span>
+        <span id="metric-monitoreo" class="text-base font-extrabold text-amber-400">0</span>
+      </div>
+      <div class="bg-slate-900 border border-rose-900/40 rounded-xl p-2.5">
+        <span class="block text-[10px] uppercase font-bold text-rose-400">Paro</span>
+        <span id="metric-paro" class="text-base font-extrabold text-rose-400">0</span>
+      </div>
+    </section>
+
+    <!-- 3. SECCIÓN DINÁMICA: NOVEDADES POR MÁQUINA / LÍNEA -->
+    <section class="space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xs uppercase tracking-wider font-bold text-slate-300 flex items-center gap-2">
+          <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+          </svg>
+          Máquinas y Eventos Relevantes
+        </h2>
+        <span id="downtime-badge" class="text-[11px] font-mono text-slate-400">
+          T. Muerto: <strong id="total-downtime" class="text-white">0</strong> min
+        </span>
+      </div>
+
+      <!-- Contenedor dinámico de tarjetas -->
+      <div id="machines-container" class="space-y-3">
+        <!-- Las tarjetas se generan dinámicamente con JavaScript -->
+      </div>
+
+      <!-- Estado vacío cuando no hay máquinas -->
+      <div id="empty-state" class="hidden text-center py-8 px-4 border-2 border-dashed border-slate-800 rounded-2xl">
+        <div class="w-12 h-12 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center mx-auto mb-2 text-slate-500">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <p class="text-sm font-semibold text-slate-300">Sin eventos capturados</p>
+        <p class="text-xs text-slate-500 mt-1">Presiona "+ Agregar Máquina" para reportar fallas, ajustes o estatus de línea.</p>
+      </div>
+
+      <!-- Botón Agregar Máquina -->
+      <button
+        id="btn-add-machine"
+        type="button"
+        class="w-full py-3.5 px-4 bg-slate-900 hover:bg-slate-850 active:bg-slate-800 border-2 border-dashed border-sky-500/50 hover:border-sky-400 text-sky-400 font-bold rounded-2xl flex items-center justify-center gap-2 transition-all shadow-sm active:scale-[0.99]"
+      >
+        <svg class="w-5 h-5 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+        </svg>
+        + Agregar Máquina / Línea
+      </button>
+    </section>
+
+    <!-- 4. DATOS ADICIONALES (Opcional - Supervisor) -->
+    <div class="pt-2 text-center">
+      <button id="btn-toggle-meta" type="button" class="text-[11px] text-slate-500 hover:text-slate-300 transition-colors underline underline-offset-4">
+        + Modificar nombre de quien reporta
+      </button>
+      <div id="meta-fields" class="hidden mt-3 p-3 bg-slate-900 border border-slate-800 rounded-xl text-left">
+        <label for="input-reporter" class="text-[11px] uppercase font-bold text-slate-400 block mb-1">
+          Nombre de quien reporta (Turno 1 / Junta 8:00 AM):
+        </label>
+        <input
+          id="input-reporter"
+          type="text"
+          placeholder="Ej: Ing. Martínez / Líder de Producción"
+          class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
+        />
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ================= BARRA INFERIOR FIJA (THUMB-FRIENDLY) ================= -->
+  <div class="fixed bottom-0 inset-x-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 p-3 sm:p-4 shadow-2xl">
+    <div class="max-w-xl mx-auto grid grid-cols-2 gap-2.5">
+      <!-- Botón Descargar PDF -->
+      <button
+        id="btn-download-pdf"
+        type="button"
+        class="h-14 bg-slate-900 hover:bg-slate-850 active:bg-slate-800 border border-slate-700 text-white font-bold rounded-2xl flex items-center justify-center gap-2 px-3 shadow-md transition-all active:scale-[0.98]"
+      >
+        <svg id="icon-pdf" class="w-5 h-5 text-rose-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-6 4h4" />
+        </svg>
+        <svg id="spinner-pdf" class="hidden animate-spin w-5 h-5 text-rose-400 shrink-0" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span class="text-xs sm:text-sm font-semibold tracking-tight leading-tight text-left">
+          Descargar<br><span class="text-[11px] font-normal text-slate-400">PDF 1 Pág</span>
+        </span>
+      </button>
+
+      <!-- Botón Enviar WhatsApp -->
+      <button
+        id="btn-send-whatsapp"
+        type="button"
+        class="h-14 bg-whatsapp hover:bg-whatsapp-hover active:bg-whatsapp-dark text-slate-950 font-black rounded-2xl flex items-center justify-center gap-2 px-3 shadow-lg shadow-emerald-950/40 transition-all active:scale-[0.98]"
+      >
+        <svg id="icon-wa" class="w-6 h-6 shrink-0 fill-current" viewBox="0 0 24 24">
+          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+        </svg>
+        <svg id="spinner-wa" class="hidden animate-spin w-5 h-5 text-slate-950 shrink-0" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span class="text-xs sm:text-sm tracking-tight leading-tight text-left">
+          Enviar por<br><span class="text-[13px] font-black">WhatsApp</span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: CONFIGURACIÓN DE DESTINATARIO ================= -->
+  <div id="modal-settings" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <svg class="w-5 h-5 text-whatsapp" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+          Destinatario del Reporte
+        </h3>
+        <button id="btn-close-settings" type="button" class="text-slate-400 hover:text-white p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <p class="text-slate-300 leading-relaxed">
+          Guarda el número de WhatsApp de tu jefe o del grupo directivo. Se almacenará en este dispositivo para enviarlo con 1 toque todos los días.
+        </p>
+
+        <div>
+          <label for="cfg-whatsapp-phone" class="font-semibold text-slate-200 block mb-1">
+            Número de WhatsApp (con clave de país):
+          </label>
+          <div class="flex">
+            <span class="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-700 bg-slate-800 text-slate-400 font-mono text-xs">
+              +
+            </span>
+            <input
+              id="cfg-whatsapp-phone"
+              type="tel"
+              inputmode="numeric"
+              placeholder="52 1 81 1234 5678"
+              class="flex-1 min-w-0 bg-slate-950 border border-slate-700 rounded-r-xl p-2.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono text-sm"
+            />
+          </div>
+          <span class="text-[11px] text-slate-500 mt-1 block">
+            Ejemplo México: <strong>5218112345678</strong> o <strong>528112345678</strong> (solo dígitos).
+          </span>
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end gap-2">
+        <button id="btn-cancel-settings" type="button" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 font-medium text-xs">
+          Cancelar
+        </button>
+        <button id="btn-save-settings" type="button" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md">
+          Guardar Número
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: CONFIRMACIÓN LIMPIAR FORMATO ================= -->
+  <div id="modal-confirm-reset" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+      <div class="flex items-center gap-3 text-rose-400">
+        <div class="w-10 h-10 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-white">¿Limpiar formato del día?</h3>
+          <p class="text-xs text-slate-400">Esto vaciará los campos para iniciar el briefing de mañana.</p>
+        </div>
+      </div>
+      <p class="text-xs text-slate-300">
+        Se borrará la Bala de Dirección y todas las máquinas capturadas. El número de WhatsApp configurado <strong>se mantendrá intacto</strong>.
+      </p>
+      <div class="pt-2 flex justify-end gap-2">
+        <button id="btn-cancel-reset" type="button" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-300 font-medium text-xs">
+          Cancelar
+        </button>
+        <button id="btn-confirm-reset" type="button" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md">
+          Sí, Limpiar Todo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= NOTIFICACIÓN TOAST FLOTANTE ================= -->
+  <div id="toast" class="fixed top-4 inset-x-4 max-w-md mx-auto z-50 hidden transition-all transform duration-200">
+    <div id="toast-content" class="rounded-xl px-4 py-3 text-xs font-medium shadow-2xl flex items-center justify-between border bg-slate-900 border-slate-700 text-white">
+      <span id="toast-msg">Mensaje</span>
+    </div>
+  </div>
+
+  <!-- ================= PLANTILLA DE RENDERIZADO PARA PDF (EXACTO 1 PÁGINA) ================= -->
+  <!-- Este bloque está oculto de la pantalla y calibrado milimétricamente para 1 página tamaño carta/A4 -->
+  <div id="pdf-render-wrapper">
+    <div id="pdf-content" style="padding: 20px 24px; width: 794px; box-sizing: border-box; background: #ffffff; color: #0f172a; font-family: 'Helvetica Neue', Arial, sans-serif;">
+      
+      <!-- Encabezado Corporativo Industrial -->
+      <div style="border-bottom: 2px solid #0369a1; padding-bottom: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span style="background: #0284c7; color: #ffffff; font-weight: 800; font-size: 13px; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.5px;">PLANTA 2</span>
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px;">Reporte Ejecutivo Operativo</span>
+          </div>
+          <h1 style="font-size: 22px; font-weight: 800; color: #0f172a; margin: 0; line-height: 1.1; letter-spacing: -0.5px;">
+            Briefing Matutino — Junta 08:00 AM
+          </h1>
+        </div>
+        <div style="text-align: right;">
+          <div style="font-size: 12px; font-weight: 700; color: #0369a1;" id="pdf-date-display">--/--/----</div>
+          <div style="font-size: 10px; color: #64748b;" id="pdf-time-display">Emisión: 08:30 AM</div>
+          <div style="font-size: 10px; color: #0284c7; font-weight: 600;" id="pdf-reporter-display">Resp: Turno 1</div>
+        </div>
+      </div>
+
+      <!-- Bala para Dirección (Bloque Destacado) -->
+      <div style="background: #f8fafc; border-left: 4px solid #0284c7; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+          <span style="font-size: 10px; font-weight: 800; color: #0284c7; text-transform: uppercase; letter-spacing: 0.8px;">
+            ★ Bala para Dirección (Estatus General)
+          </span>
+          <span style="font-size: 9px; color: #94a3b8; font-style: italic;">Prioridad para Junta 09:00 AM</span>
+        </div>
+        <p id="pdf-bala-text" style="font-size: 12px; line-height: 1.45; color: #1e293b; margin: 0; font-weight: 500;">
+          Sin novedades reportadas.
+        </p>
+      </div>
+
+      <!-- Resumen de Métricas Flash -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px;">
+        <div style="background: #f1f5f9; padding: 6px 10px; border-radius: 6px; text-align: center; border: 1px solid #e2e8f0;">
+          <div style="font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase;">Eventos Reportados</div>
+          <div id="pdf-metric-total" style="font-size: 15px; font-weight: 800; color: #0f172a;">0</div>
+        </div>
+        <div style="background: #f0fdf4; padding: 6px 10px; border-radius: 6px; text-align: center; border: 1px solid #bbf7d0;">
+          <div style="font-size: 9px; color: #15803d; font-weight: 700; text-transform: uppercase;">En Operación (OK)</div>
+          <div id="pdf-metric-ok" style="font-size: 15px; font-weight: 800; color: #16a34a;">0</div>
+        </div>
+        <div style="background: #fffbeb; padding: 6px 10px; border-radius: 6px; text-align: center; border: 1px solid #fde68a;">
+          <div style="font-size: 9px; color: #b45309; font-weight: 700; text-transform: uppercase;">En Monitoreo</div>
+          <div id="pdf-metric-monitoreo" style="font-size: 15px; font-weight: 800; color: #d97706;">0</div>
+        </div>
+        <div style="background: #fef2f2; padding: 6px 10px; border-radius: 6px; text-align: center; border: 1px solid #fecaca;">
+          <div style="font-size: 9px; color: #b91c1c; font-weight: 700; text-transform: uppercase;">En Paro</div>
+          <div id="pdf-metric-paro" style="font-size: 15px; font-weight: 800; color: #dc2626;">0</div>
+        </div>
+      </div>
+
+      <!-- Tabla Industrial de Novedades -->
+      <div style="margin-bottom: 14px;">
+        <div style="font-size: 11px; font-weight: 800; color: #0f172a; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">
+          Detalle Operativo por Máquina / Línea
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+          <thead>
+            <tr style="background: #0f172a; color: #ffffff;">
+              <th style="padding: 6px 8px; text-align: left; width: 22%; font-weight: 700; font-size: 10px; text-transform: uppercase; border-top-left-radius: 4px;">Máquina / Línea</th>
+              <th style="padding: 6px 8px; text-align: center; width: 14%; font-weight: 700; font-size: 10px; text-transform: uppercase;">Estatus</th>
+              <th style="padding: 6px 8px; text-align: left; width: 29%; font-weight: 700; font-size: 10px; text-transform: uppercase;">Falla o Síntoma</th>
+              <th style="padding: 6px 8px; text-align: left; width: 25%; font-weight: 700; font-size: 10px; text-transform: uppercase;">Solución o Acción</th>
+              <th style="padding: 6px 8px; text-align: right; width: 10%; font-weight: 700; font-size: 10px; text-transform: uppercase; border-top-right-radius: 4px;">T. Muerto</th>
+            </tr>
+          </thead>
+          <tbody id="pdf-table-body">
+            <!-- Filas inyectadas dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pie de Página Formal de 1 Página -->
+      <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 9px; color: #64748b;">
+        <div>
+          <span>Briefing Matutino Planta 2 • Uso Interno Confidencial</span>
+        </div>
+        <div style="display: flex; gap: 12px;">
+          <span>Tiempo Muerto Acumulado: <strong id="pdf-total-downtime" style="color: #0f172a;">0 min</strong></span>
+          <span>Página 1 de 1</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= LÓGICA DE APLICACIÓN EN JAVASCRIPT ================= -->
+  <script>
+    // --- ESTADO Y CONSTANTES ---
+    const STORAGE_PHONE_KEY = 'briefing_p2_whatsapp_phone';
+    const STORAGE_DRAFT_KEY = 'briefing_p2_draft_v1';
+    const STORAGE_REPORTER_KEY = 'briefing_p2_reporter_name';
+
+    let state = {
+      bala: '',
+      reporter: '',
+      machines: []
+    };
+
+    // Plantilla de máquina vacía
+    function createEmptyMachine() {
+      return {
+        id: 'm_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        line: '',
+        fault: '',
+        solution: '',
+        status: 'OK', // 'OK' | 'Monitoreo' | 'Paro'
+        downtime: ''
+      };
+    }
+
+    // --- ELEMENTOS DOM ---
+    const dom = {
+      liveDatetime: document.getElementById('live-datetime'),
+      balaInput: document.getElementById('bala-direccion'),
+      balaCounter: document.getElementById('bala-counter'),
+      machinesContainer: document.getElementById('machines-container'),
+      emptyState: document.getElementById('empty-state'),
+      btnAddMachine: document.getElementById('btn-add-machine'),
+      btnDownloadPdf: document.getElementById('btn-download-pdf'),
+      btnSendWhatsapp: document.getElementById('btn-send-whatsapp'),
+      btnOpenSettings: document.getElementById('btn-open-settings'),
+      btnCloseSettings: document.getElementById('btn-close-settings'),
+      btnCancelSettings: document.getElementById('btn-cancel-settings'),
+      btnSaveSettings: document.getElementById('btn-save-settings'),
+      modalSettings: document.getElementById('modal-settings'),
+      cfgPhoneInput: document.getElementById('cfg-whatsapp-phone'),
+      phoneBadge: document.getElementById('phone-badge'),
+      btnResetForm: document.getElementById('btn-reset-form'),
+      modalReset: document.getElementById('modal-confirm-reset'),
+      btnCancelReset: document.getElementById('btn-cancel-reset'),
+      btnConfirmReset: document.getElementById('btn-confirm-reset'),
+      btnToggleMeta: document.getElementById('btn-toggle-meta'),
+      metaFields: document.getElementById('meta-fields'),
+      inputReporter: document.getElementById('input-reporter'),
+      // Métricas
+      metricTotal: document.getElementById('metric-total'),
+      metricOk: document.getElementById('metric-ok'),
+      metricMonitoreo: document.getElementById('metric-monitoreo'),
+      metricParo: document.getElementById('metric-paro'),
+      totalDowntime: document.getElementById('total-downtime'),
+      // Spinners
+      iconPdf: document.getElementById('icon-pdf'),
+      spinnerPdf: document.getElementById('spinner-pdf'),
+      iconWa: document.getElementById('icon-wa'),
+      spinnerWa: document.getElementById('spinner-wa'),
+      // Toast
+      toast: document.getElementById('toast'),
+      toastMsg: document.getElementById('toast-msg'),
+    };
+
+    // --- INICIALIZACIÓN ---
+    document.addEventListener('DOMContentLoaded', () => {
+      initClock();
+      loadStoredSettings();
+      loadDraft();
+      setupEventListeners();
+      renderMachines();
+      updateMetrics();
+    });
+
+    // Reloj dinámico y formateador de fecha
+    function initClock() {
+      const updateTime = () => {
+        const now = new Date();
+        const options = { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
+        dom.liveDatetime.textContent = now.toLocaleDateString('es-MX', options);
+      };
+      updateTime();
+      setInterval(updateTime, 30000);
+    }
+
+    // Configuración guardada en LocalStorage
+    function loadStoredSettings() {
+      const savedPhone = localStorage.getItem(STORAGE_PHONE_KEY) || '';
+      dom.cfgPhoneInput.value = savedPhone;
+      if (savedPhone) {
+        dom.phoneBadge.classList.remove('hidden');
+      } else {
+        dom.phoneBadge.classList.add('hidden');
+      }
+
+      const savedReporter = localStorage.getItem(STORAGE_REPORTER_KEY) || '';
+      if (savedReporter) {
+        state.reporter = savedReporter;
+        dom.inputReporter.value = savedReporter;
+      }
+    }
+
+    // Cargar borrador para no perder datos al refrescar
+    function loadDraft() {
+      try {
+        const draft = localStorage.getItem(STORAGE_DRAFT_KEY);
+        if (draft) {
+          const parsed = JSON.parse(draft);
+          if (parsed && typeof parsed === 'object') {
+            state.bala = parsed.bala || '';
+            state.machines = Array.isArray(parsed.machines) ? parsed.machines : [];
+            dom.balaInput.value = state.bala;
+            updateBalaCounter();
+          }
+        }
+      } catch (e) {
+        console.warn('Error cargando borrador previo', e);
+      }
+
+      // Si no hay máquinas, agregamos 1 por defecto para captura inmediata
+      if (state.machines.length === 0) {
+        state.machines.push(createEmptyMachine());
+      }
+    }
+
+    // Auto-guardado en LocalStorage
+    let saveTimeout = null;
+    function autoSaveDraft() {
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        try {
+          localStorage.setItem(STORAGE_DRAFT_KEY, JSON.stringify({
+            bala: state.bala,
+            machines: state.machines
+          }));
+        } catch (e) {
+          console.warn('No se pudo persistir el borrador', e);
+        }
+      }, 300);
+    }
+
+    // --- RENDERIZADO DE MÁQUINAS ---
+    function renderMachines() {
+      dom.machinesContainer.innerHTML = '';
+
+      if (state.machines.length === 0) {
+        dom.emptyState.classList.remove('hidden');
+      } else {
+        dom.emptyState.classList.add('hidden');
+      }
+
+      state.machines.forEach((machine, index) => {
+        const card = document.createElement('div');
+        card.className = `card-enter bg-slate-900 border rounded-2xl p-4 transition-all space-y-3 relative ${getStatusCardBorder(machine.status)}`;
+        card.dataset.id = machine.id;
+
+        card.innerHTML = `
+          <!-- Fila 1: Línea y Estatus -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex-1">
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                Máquina / Línea:
+              </label>
+              <input
+                type="text"
+                data-field="line"
+                value="${escapeHtml(machine.line)}"
+                placeholder="Ej: Línea 2 - Envasadora"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50 font-medium"
+              />
+            </div>
+            <button
+              type="button"
+              data-action="delete"
+              class="self-end mb-1 p-2 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-xl transition-colors"
+              title="Eliminar evento"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </button>
+          </div>
+
+          <!-- Selector de Estatus (Segmented control rápido) -->
+          <div>
+            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+              Estatus Operativo:
+            </label>
+            <div class="grid grid-cols-3 gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+              <button
+                type="button"
+                data-action="set-status"
+                data-status="OK"
+                class="py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${machine.status === 'OK' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'}"
+              >
+                <span class="w-2 h-2 rounded-full ${machine.status === 'OK' ? 'bg-slate-950' : 'bg-emerald-400'}"></span>
+                OK
+              </button>
+              <button
+                type="button"
+                data-action="set-status"
+                data-status="Monitoreo"
+                class="py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${machine.status === 'Monitoreo' ? 'bg-amber-400 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-white'}"
+              >
+                <span class="w-2 h-2 rounded-full ${machine.status === 'Monitoreo' ? 'bg-slate-950' : 'bg-amber-400'}"></span>
+                Monitoreo
+              </button>
+              <button
+                type="button"
+                data-action="set-status"
+                data-status="Paro"
+                class="py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${machine.status === 'Paro' ? 'bg-rose-500 text-white shadow-sm' : 'text-slate-400 hover:text-white'}"
+              >
+                <span class="w-2 h-2 rounded-full ${machine.status === 'Paro' ? 'bg-white' : 'bg-rose-500'}"></span>
+                Paro
+              </button>
+            </div>
+          </div>
+
+          <!-- Falla o Síntoma -->
+          <div>
+            <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+              Falla o Síntoma:
+            </label>
+            <input
+              type="text"
+              data-field="fault"
+              value="${escapeHtml(machine.fault)}"
+              placeholder="Ej: Falla en sensor inductivo o ruido anormal en motor"
+              class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+            />
+          </div>
+
+          <!-- Solución o Acción Tomada + Tiempo Muerto -->
+          <div class="grid grid-cols-3 gap-2">
+            <div class="col-span-2">
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                Solución / Acción Tomada:
+              </label>
+              <input
+                type="text"
+                data-field="solution"
+                value="${escapeHtml(machine.solution)}"
+                placeholder="Ej: Se ajustó galga / En espera de refacción"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500/50"
+              />
+            </div>
+            <div>
+              <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                T. Muerto (min):
+              </label>
+              <input
+                type="number"
+                inputmode="numeric"
+                data-field="downtime"
+                value="${machine.downtime !== undefined ? machine.downtime : ''}"
+                placeholder="0"
+                min="0"
+                class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500/50 font-mono text-center"
+              />
+            </div>
+          </div>
+        `;
+
+        dom.machinesContainer.appendChild(card);
+      });
+    }
+
+    function getStatusCardBorder(status) {
+      if (status === 'Paro') return 'border-rose-500/60 shadow-rose-950/20';
+      if (status === 'Monitoreo') return 'border-amber-500/50 shadow-amber-950/20';
+      return 'border-slate-800';
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    // --- EVENT LISTENERS ---
+    function setupEventListeners() {
+      // Contador de bala
+      dom.balaInput.addEventListener('input', (e) => {
+        state.bala = e.target.value;
+        updateBalaCounter();
+        autoSaveDraft();
+      });
+
+      // Chips rápidos para bala
+      document.querySelectorAll('.quick-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const chipText = btn.getAttribute('data-chip');
+          if (dom.balaInput.value.trim() === '') {
+            dom.balaInput.value = chipText;
+          } else {
+            dom.balaInput.value = dom.balaInput.value.trim() + ' ' + chipText;
+          }
+          state.bala = dom.balaInput.value;
+          updateBalaCounter();
+          autoSaveDraft();
+          dom.balaInput.focus();
+        });
+      });
+
+      // Supervisor / Reporta
+      dom.btnToggleMeta.addEventListener('click', () => {
+        dom.metaFields.classList.toggle('hidden');
+      });
+      dom.inputReporter.addEventListener('input', (e) => {
+        state.reporter = e.target.value;
+        localStorage.setItem(STORAGE_REPORTER_KEY, state.reporter);
+      });
+
+      // Botón Agregar Máquina
+      dom.btnAddMachine.addEventListener('click', () => {
+        const newM = createEmptyMachine();
+        state.machines.push(newM);
+        renderMachines();
+        updateMetrics();
+        autoSaveDraft();
+
+        // Scroll al nuevo elemento
+        setTimeout(() => {
+          const newCard = dom.machinesContainer.querySelector(`[data-id="${newM.id}"]`);
+          if (newCard) {
+            newCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const lineInput = newCard.querySelector('input[data-field="line"]');
+            if (lineInput) lineInput.focus();
+          }
+        }, 60);
+      });
+
+      // Delegación de eventos en contenedor de máquinas (inputs, botones de estatus, eliminar)
+      dom.machinesContainer.addEventListener('input', (e) => {
+        const card = e.target.closest('[data-id]');
+        if (!card) return;
+        const id = card.dataset.id;
+        const machine = state.machines.find(m => m.id === id);
+        if (!machine) return;
+
+        const field = e.target.dataset.field;
+        if (field) {
+          machine[field] = e.target.value;
+          updateMetrics();
+          autoSaveDraft();
+        }
+      });
+
+      dom.machinesContainer.addEventListener('click', (e) => {
+        const card = e.target.closest('[data-id]');
+        if (!card) return;
+        const id = card.dataset.id;
+        const machine = state.machines.find(m => m.id === id);
+        if (!machine) return;
+
+        // Acción: Cambiar Estatus
+        const statusBtn = e.target.closest('[data-action="set-status"]');
+        if (statusBtn) {
+          const newStatus = statusBtn.dataset.status;
+          machine.status = newStatus;
+          renderMachines();
+          updateMetrics();
+          autoSaveDraft();
+          return;
+        }
+
+        // Acción: Eliminar Máquina
+        const deleteBtn = e.target.closest('[data-action="delete"]');
+        if (deleteBtn) {
+          state.machines = state.machines.filter(m => m.id !== id);
+          renderMachines();
+          updateMetrics();
+          autoSaveDraft();
+          showToast('Máquina eliminada');
+          return;
+        }
+      });
+
+      // Modal Configuración WhatsApp
+      dom.btnOpenSettings.addEventListener('click', () => {
+        dom.modalSettings.classList.remove('hidden');
+        dom.cfgPhoneInput.focus();
+      });
+      dom.btnCloseSettings.addEventListener('click', () => dom.modalSettings.classList.add('hidden'));
+      dom.btnCancelSettings.addEventListener('click', () => dom.modalSettings.classList.add('hidden'));
+      dom.btnSaveSettings.addEventListener('click', () => {
+        const rawPhone = dom.cfgPhoneInput.value.replace(/[^0-9]/g, '');
+        if (rawPhone.length < 8) {
+          showToast('Ingresa un número válido con código de país', 'error');
+          return;
+        }
+        localStorage.setItem(STORAGE_PHONE_KEY, rawPhone);
+        dom.phoneBadge.classList.remove('hidden');
+        dom.modalSettings.classList.add('hidden');
+        showToast('Número de WhatsApp guardado con éxito');
+      });
+
+      // Modal Limpiar Formato
+      dom.btnResetForm.addEventListener('click', () => {
+        dom.modalReset.classList.remove('hidden');
+      });
+      dom.btnCancelReset.addEventListener('click', () => dom.modalReset.classList.add('hidden'));
+      dom.btnConfirmReset.addEventListener('click', () => {
+        resetFormToNewDay();
+        dom.modalReset.classList.add('hidden');
+      });
+
+      // Acciones Principales
+      dom.btnDownloadPdf.addEventListener('click', handleDownloadPdf);
+      dom.btnSendWhatsapp.addEventListener('click', handleSendWhatsapp);
+    }
+
+    function updateBalaCounter() {
+      const len = (state.bala || '').length;
+      dom.balaCounter.textContent = `${len} caracteres`;
+    }
+
+    function updateMetrics() {
+      const total = state.machines.length;
+      const ok = state.machines.filter(m => m.status === 'OK').length;
+      const mon = state.machines.filter(m => m.status === 'Monitoreo').length;
+      const paro = state.machines.filter(m => m.status === 'Paro').length;
+
+      let downtimeSum = 0;
+      state.machines.forEach(m => {
+        const val = parseInt(m.downtime, 10);
+        if (!isNaN(val) && val > 0) downtimeSum += val;
+      });
+
+      dom.metricTotal.textContent = total;
+      dom.metricOk.textContent = ok;
+      dom.metricMonitoreo.textContent = mon;
+      dom.metricParo.textContent = paro;
+      dom.totalDowntime.textContent = downtimeSum;
+    }
+
+    function resetFormToNewDay() {
+      state.bala = '';
+      state.machines = [createEmptyMachine()];
+      dom.balaInput.value = '';
+      updateBalaCounter();
+      renderMachines();
+      updateMetrics();
+      localStorage.removeItem(STORAGE_DRAFT_KEY);
+      showToast('Formato listo para un nuevo día');
+    }
+
+    // --- GENERACIÓN DEL PDF DE 1 PÁGINA (INDUSTRIAL & FORMAL) ---
+    function preparePdfTemplate() {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+      document.getElementById('pdf-date-display').textContent = dateStr;
+      document.getElementById('pdf-time-display').textContent = `Emisión: ${timeStr}`;
+      document.getElementById('pdf-reporter-display').textContent = `Resp: ${state.reporter.trim() || 'Líder de Turno 1'}`;
+
+      // Bala de dirección
+      const pdfBala = document.getElementById('pdf-bala-text');
+      pdfBala.textContent = state.bala.trim() ? state.bala.trim() : 'Sin comentarios extraordinarios registrados durante la sesión matutina.';
+
+      // Métricas
+      const total = state.machines.length;
+      const ok = state.machines.filter(m => m.status === 'OK').length;
+      const mon = state.machines.filter(m => m.status === 'Monitoreo').length;
+      const paro = state.machines.filter(m => m.status === 'Paro').length;
+
+      let downtimeSum = 0;
+      state.machines.forEach(m => {
+        const val = parseInt(m.downtime, 10);
+        if (!isNaN(val) && val > 0) downtimeSum += val;
+      });
+
+      document.getElementById('pdf-metric-total').textContent = total;
+      document.getElementById('pdf-metric-ok').textContent = ok;
+      document.getElementById('pdf-metric-monitoreo').textContent = mon;
+      document.getElementById('pdf-metric-paro').textContent = paro;
+      document.getElementById('pdf-total-downtime').textContent = `${downtimeSum} min`;
+
+      // Tabla de máquinas
+      const tbody = document.getElementById('pdf-table-body');
+      tbody.innerHTML = '';
+
+      if (state.machines.length === 0) {
+        const emptyRow = document.createElement('tr');
+        emptyRow.innerHTML = `<td colspan="5" style="padding: 12px; text-align: center; color: #94a3b8; font-style: italic;">No se registraron anomalías en máquinas ni líneas operativas.</td>`;
+        tbody.appendChild(emptyRow);
+      } else {
+        state.machines.forEach((m, idx) => {
+          const row = document.createElement('tr');
+          const isZebra = idx % 2 === 1;
+          row.style.background = isZebra ? '#f8fafc' : '#ffffff';
+          row.style.borderBottom = '1px solid #e2e8f0';
+
+          let statusBadge = '';
+          if (m.status === 'Paro') {
+            statusBadge = `<span style="background: #fee2e2; color: #991b1b; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 9px; border: 1px solid #f87171;">PARO</span>`;
+          } else if (m.status === 'Monitoreo') {
+            statusBadge = `<span style="background: #fef3c7; color: #92400e; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 9px; border: 1px solid #fcd34d;">MONITOREO</span>`;
+          } else {
+            statusBadge = `<span style="background: #dcfce7; color: #166534; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-size: 9px; border: 1px solid #86efac;">OK</span>`;
+          }
+
+          const dtText = (m.downtime && parseInt(m.downtime, 10) > 0) ? `${m.downtime} min` : '-';
+
+          row.innerHTML = `
+            <td style="padding: 6px 8px; font-weight: 700; color: #0f172a; vertical-align: top;">${escapeHtml(m.line) || 'Línea / Máquina sin especificar'}</td>
+            <td style="padding: 6px 8px; text-align: center; vertical-align: top;">${statusBadge}</td>
+            <td style="padding: 6px 8px; color: #334155; vertical-align: top; line-height: 1.3;">${escapeHtml(m.fault) || 'Operación regular'}</td>
+            <td style="padding: 6px 8px; color: #334155; vertical-align: top; line-height: 1.3;">${escapeHtml(m.solution) || 'Seguimiento en turno'}</td>
+            <td style="padding: 6px 8px; text-align: right; font-weight: 600; color: #0f172a; font-family: monospace; vertical-align: top;">${dtText}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+    }
+
+    function getPdfFileName() {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const dd = String(now.getDate()).padStart(2, '0');
+      return `Briefing_Planta2_${yyyy}-${mm}-${dd}.pdf`;
+    }
+
+    function getHtml2PdfConfig(filename) {
+      return {
+        margin: [6, 6, 6, 6], // mm
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2, // Nitidez retina para impresión
+          useCORS: true,
+          logging: false,
+          scrollY: 0
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: 'letter',
+          orientation: 'portrait',
+          compress: true
+        },
+        pagebreak: { mode: ['avoid-all'] }
+      };
+    }
+
+    async function createSinglePagePdf(filename) {
+      preparePdfTemplate();
+      const element = document.getElementById('pdf-content');
+      const opt = getHtml2PdfConfig(filename);
+
+      // 1. Renderizar con html2pdf para obtener el objeto jsPDF
+      const worker = html2pdf().set(opt).from(element).toPdf();
+      const pdf = await worker.get('pdf');
+
+      // 2. Garantía matemática de 1 sola página:
+      // Si por alguna razón de fuentes o márgenes el motor intentara crear una 2da página, la eliminamos de inmediato
+      while (pdf.internal.getNumberOfPages() > 1) {
+        pdf.deletePage(pdf.internal.getNumberOfPages());
+      }
+
+      return pdf;
+    }
+
+    async function handleDownloadPdf() {
+      // Feedback visual
+      dom.iconPdf.classList.add('hidden');
+      dom.spinnerPdf.classList.remove('hidden');
+      dom.btnDownloadPdf.disabled = true;
+
+      try {
+        const filename = getPdfFileName();
+        const pdf = await createSinglePagePdf(filename);
+        pdf.save(filename);
+        showToast('PDF descargado (1 página exacta)');
+      } catch (err) {
+        console.error('Error generando PDF:', err);
+        showToast('Hubo un problema al generar el PDF', 'error');
+      } finally {
+        dom.iconPdf.classList.remove('hidden');
+        dom.spinnerPdf.classList.add('hidden');
+        dom.btnDownloadPdf.disabled = false;
+      }
+    }
+
+    // --- ENVÍO POR WHATSAPP (WEB SHARE API CON FALLBACK DIRECTO A WA.ME) ---
+    async function handleSendWhatsapp() {
+      const savedPhone = localStorage.getItem(STORAGE_PHONE_KEY);
+      if (!savedPhone) {
+        // Pedir configuración si no está guardado
+        dom.modalSettings.classList.remove('hidden');
+        showToast('Por favor ingresa el número de WhatsApp de Dirección', 'info');
+        return;
+      }
+
+      dom.iconWa.classList.add('hidden');
+      dom.spinnerWa.classList.remove('hidden');
+      dom.btnSendWhatsapp.disabled = true;
+
+      const filename = getPdfFileName();
+
+      try {
+        const pdf = await createSinglePagePdf(filename);
+        const pdfBlob = pdf.output('blob');
+        const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+        // Texto ejecutivo formateado para WhatsApp
+        const summaryText = buildWhatsappTextSummary();
+
+        // 2. Verificar si el navegador soporta compartir archivos por Web Share API
+        if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+          try {
+            await navigator.share({
+              title: 'Briefing Matutino Planta 2',
+              text: summaryText,
+              files: [pdfFile]
+            });
+            showToast('Reporte compartido');
+            return;
+          } catch (shareErr) {
+            // Si el usuario canceló la hoja de compartir nativa, no hacemos fallback brusco
+            if (shareErr.name === 'AbortError') {
+              return;
+            }
+            console.warn('Web share de archivo no completado, usando enlace directo', shareErr);
+          }
+        }
+
+        // 3. Fallback directo: Abrir wa.me con texto completo estructurado
+        openWhatsappDirectUrl(savedPhone, summaryText);
+
+      } catch (err) {
+        console.error('Error en proceso de WhatsApp:', err);
+        // Fallback de rescate inmediato
+        const summaryText = buildWhatsappTextSummary();
+        openWhatsappDirectUrl(savedPhone, summaryText);
+      } finally {
+        dom.iconWa.classList.remove('hidden');
+        dom.spinnerWa.classList.add('hidden');
+        dom.btnSendWhatsapp.disabled = false;
+      }
+    }
+
+    function buildWhatsappTextSummary() {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const timeStr = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+      let text = `*📋 BRIEFING MATUTINO - PLANTA 2*\n`;
+      text += `📅 _${dateStr} • Junta 08:00 AM (${timeStr})_\n`;
+      if (state.reporter.trim()) {
+        text += `👤 _Reporta: ${state.reporter.trim()}_\n`;
+      }
+      text += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+
+      // Bala para Dirección
+      text += `*🎯 BALA PARA DIRECCIÓN:*\n`;
+      text += `${state.bala.trim() ? state.bala.trim() : 'Sin novedades extraordinarias.'}\n\n`;
+
+      // Eventos por máquina
+      text += `*⚙️ EVENTOS Y LÍNEAS OPERATIVAS:*\n`;
+      if (state.machines.length === 0) {
+        text += `• Todas las líneas operando en condiciones normales (OK).\n`;
+      } else {
+        state.machines.forEach((m, i) => {
+          let statusEmoji = '🟢';
+          if (m.status === 'Paro') statusEmoji = '🔴';
+          else if (m.status === 'Monitoreo') statusEmoji = '🟡';
+
+          text += `${statusEmoji} *${m.line || 'Línea/Máquina'}* [${m.status.toUpperCase()}]\n`;
+          if (m.fault) text += `  └ *Falla:* ${m.fault}\n`;
+          if (m.solution) text += `  └ *Acción:* ${m.solution}\n`;
+          if (m.downtime && parseInt(m.downtime, 10) > 0) {
+            text += `  └ *T. Muerto:* ${m.downtime} min\n`;
+          }
+          text += `\n`;
+        });
+      }
+
+      // Resumen inferior
+      let totalDowntime = 0;
+      let paroCount = 0;
+      state.machines.forEach(m => {
+        if (m.status === 'Paro') paroCount++;
+        const dt = parseInt(m.downtime, 10);
+        if (!isNaN(dt) && dt > 0) totalDowntime += dt;
+      });
+
+      text += `━━━━━━━━━━━━━━━━━━━━━\n`;
+      text += `📊 *Resumen:* ${state.machines.length} eventos | ${paroCount} en Paro | ${totalDowntime} min paro total.\n`;
+      text += `_Generado para junta de Dirección 09:00 AM_`;
+
+      return text;
+    }
+
+    function openWhatsappDirectUrl(phone, text) {
+      const cleanPhone = phone.replace(/[^0-9]/g, '');
+      const encodedText = encodeURIComponent(text);
+      const waUrl = `https://wa.me/${cleanPhone}?text=${encodedText}`;
+      window.open(waUrl, '_blank');
+      showToast('Abriendo WhatsApp con el reporte formateado...');
+    }
+
+    // --- SISTEMA TOAST DE NOTIFICACIÓN ---
+    let toastTimeout = null;
+    function showToast(msg, type = 'info') {
+      clearTimeout(toastTimeout);
+      dom.toastMsg.textContent = msg;
+      dom.toast.classList.remove('hidden');
+
+      const content = document.getElementById('toast-content');
+      if (type === 'error') {
+        content.className = 'rounded-xl px-4 py-3 text-xs font-medium shadow-2xl flex items-center justify-between border bg-rose-950 border-rose-800 text-rose-100';
+      } else {
+        content.className = 'rounded-xl px-4 py-3 text-xs font-medium shadow-2xl flex items-center justify-between border bg-slate-900 border-slate-700 text-white';
+      }
+
+      toastTimeout = setTimeout(() => {
+        dom.toast.classList.add('hidden');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
